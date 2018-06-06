@@ -19,11 +19,6 @@ namespace Accord_RSTP
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-
-            foreach (FilterInfo device in videoDevices)
-                comboBox1.Items.Add(device.Name);
-
             videoSource = new VideoCaptureDevice();
         }
 
@@ -35,11 +30,15 @@ namespace Accord_RSTP
 
         private void BtnStart_Click(object sender, EventArgs e)
         {
-            videoSource = new VideoCaptureDevice(videoDevices[comboBox1.SelectedIndex].MonikerString);
-            asyncVideoSource = new AsyncVideoSource(videoSource);
+            VideoCaptureDeviceForm captureDeviceForm = new VideoCaptureDeviceForm();
+            if(captureDeviceForm.ShowDialog(this) == DialogResult.OK)
+            {
+                videoSource = captureDeviceForm.VideoDevice;
+                asyncVideoSource = new AsyncVideoSource(videoSource);
 
-            asyncVideoSource.NewFrame += AsyncVideoSource_NewFrame;
-            asyncVideoSource.Start();
+                asyncVideoSource.NewFrame += AsyncVideoSource_NewFrame;
+                asyncVideoSource.Start();
+            }
         }
 
         /// <summary>

@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.BtnStop = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -43,25 +42,16 @@
             this.pictureBox1.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(445, 326);
+            this.pictureBox1.Size = new System.Drawing.Size(445, 328);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(13, 345);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(444, 21);
-            this.comboBox1.TabIndex = 1;
             // 
             // btnStart
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(12, 373);
-            this.btnStart.Name = "BtnStart";
+            this.btnStart.Location = new System.Drawing.Point(12, 349);
+            this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(215, 23);
             this.btnStart.TabIndex = 2;
             this.btnStart.Text = "&Start";
@@ -70,7 +60,7 @@
             // 
             // BtnStop
             // 
-            this.BtnStop.Location = new System.Drawing.Point(233, 373);
+            this.BtnStop.Location = new System.Drawing.Point(233, 347);
             this.BtnStop.Name = "BtnStop";
             this.BtnStop.Size = new System.Drawing.Size(224, 23);
             this.BtnStop.TabIndex = 3;
@@ -82,10 +72,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(469, 402);
+            this.ClientSize = new System.Drawing.Size(469, 404);
             this.Controls.Add(this.BtnStop);
             this.Controls.Add(this.btnStart);
-            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.pictureBox1);
             this.Name = "Form1";
             this.Text = "Accord Rstp";
@@ -99,7 +88,6 @@
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Button BtnStop;
     }
