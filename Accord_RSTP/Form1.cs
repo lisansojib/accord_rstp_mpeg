@@ -3,14 +3,15 @@ using System;
 using System.Windows.Forms;
 using Accord.Video;
 using System.Drawing;
+using System.Net;
 
 namespace Accord_RSTP
 {
     public partial class Form1 : Form
     {
-        private FilterInfoCollection videoDevices;
         private IVideoSource videoSource;
         private AsyncVideoSource asyncVideoSource;
+        private string fileName;
 
         public Form1()
         {
@@ -30,10 +31,13 @@ namespace Accord_RSTP
 
         private void BtnStart_Click(object sender, EventArgs e)
         {
+            fileName = "Channel" + "_" + DateTime.Now.Ticks.ToString() + ".jpeg";
+
             VideoCaptureDeviceForm captureDeviceForm = new VideoCaptureDeviceForm();
             if(captureDeviceForm.ShowDialog(this) == DialogResult.OK)
             {
                 videoSource = captureDeviceForm.VideoDevice;
+                var source = videoSource.Source;
                 asyncVideoSource = new AsyncVideoSource(videoSource);
 
                 asyncVideoSource.NewFrame += AsyncVideoSource_NewFrame;
@@ -60,6 +64,30 @@ namespace Accord_RSTP
         {
             Bitmap image = (Bitmap)eventArgs.Frame.Clone();
             pictureBox1.Image = image;
+
+            try
+            {
+                var file = ImageToByte(eventArgs.Frame);
+                var client = new WebClient();
+                string boundary = "------------------------" + DateTime.Now.Ticks.ToString("x");
+                client.Headers[HttpRequestHeader.ContentType] = "multipart/form-data; boundary=" + boundary;
+                var fileData = client.Encoding.GetString(file);
+                var package = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n{3}\r\n--{0}--\r\n", boundary, fileName, "image/jpeg", fileData);
+
+                var nfile = client.Encoding.GetBytes(package);
+
+                byte[] resp = client.UploadData(Constants.StreamUploadUrl, "POST", nfile);
+            }
+            catch(WebException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public static byte[] ImageToByte(Image img)
+        {
+            ImageConverter converter = new ImageConverter();
+            return (byte[])converter.ConvertTo(img, typeof(byte[]));
         }
     }
 }
