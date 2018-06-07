@@ -7,10 +7,9 @@ using System.Net;
 using System.Collections.Generic;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Globalization;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace Accord_RSTP
 {
@@ -44,7 +43,7 @@ namespace Accord_RSTP
 
         private void BtnStart_Click(object sender, EventArgs e)
         {
-            fileName = "Channel" + "_" + DateTime.Now.Ticks.ToString() + ".jpeg";
+            fileName = "Channel" + "_" + DateTime.Now.Ticks.ToString() + Constants.EXTENSION_JPEG;
 
             VideoCaptureDeviceForm captureDeviceForm = new VideoCaptureDeviceForm();
             if(captureDeviceForm.ShowDialog(this) == DialogResult.OK)
@@ -78,7 +77,7 @@ namespace Accord_RSTP
             pictureBox1.Image = image;
 
             var file = ImageToByte(eventArgs.Frame);
-            Upload(file, accessToken, fileName);
+            Upload(file, fileName, accessToken);
         }
 
         public static byte[] ImageToByte(Image img)
@@ -87,7 +86,7 @@ namespace Accord_RSTP
             return (byte[])converter.ConvertTo(img, typeof(byte[]));
         }
 
-        private static void Upload(byte[] file, string accessToken, string fileName)
+        private static void UploadWebClient(byte[] file, string accessToken, string fileName)
         {
             try
             {
@@ -96,7 +95,7 @@ namespace Accord_RSTP
                 client.Headers[HttpRequestHeader.ContentType] = "multipart/form-data; boundary=" + boundary;
                 client.Headers[HttpRequestHeader.Authorization] = "Bearer " + accessToken;
                 var fileData = client.Encoding.GetString(file);
-                var package = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n{3}\r\n--{0}--\r\n", boundary, fileName, "image/jpeg", fileData);
+                var package = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n{3}\r\n--{0}--\r\n", boundary, fileName, Constants.CONTENT_TYPE_JPEG, fileData);
 
                 var nfile = client.Encoding.GetBytes(package);
 
@@ -105,6 +104,38 @@ namespace Accord_RSTP
             catch (WebException ex)
             {
                 Console.WriteLine(ex.Message);
+            }
+        }
+
+        public static void Upload(byte[] image, string fileName, string accessToken)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                    using (var content = new MultipartFormDataContent("Upload----" + DateTime.Now.Ticks.ToString("x")))
+                    {
+                        var fileContent = new StreamContent(new MemoryStream(image));
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(Constants.CONTENT_TYPE_JPEG);
+
+                        var metaData = new StringContent("Meta Data", Encoding.UTF8);
+
+                        content.Add(fileContent, "file", "upload.jpg");
+                        content.Add(metaData, "meta_data");
+
+                        using (var message = client.PostAsync(Constants.STREAM_UPLOAD_URL, content).Result)
+                        {
+                            var input = message.Content.ReadAsStringAsync();
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Handle exception later
             }
         }
 
