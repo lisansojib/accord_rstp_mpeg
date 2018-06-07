@@ -7,6 +7,10 @@ using System.Net;
 using System.Collections.Generic;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace Accord_RSTP
 {
@@ -73,9 +77,20 @@ namespace Accord_RSTP
             Bitmap image = (Bitmap)eventArgs.Frame.Clone();
             pictureBox1.Image = image;
 
+            var file = ImageToByte(eventArgs.Frame);
+            Upload(file, accessToken, fileName);
+        }
+
+        public static byte[] ImageToByte(Image img)
+        {
+            ImageConverter converter = new ImageConverter();
+            return (byte[])converter.ConvertTo(img, typeof(byte[]));
+        }
+
+        private static void Upload(byte[] file, string accessToken, string fileName)
+        {
             try
             {
-                var file = ImageToByte(eventArgs.Frame);
                 var client = new WebClient();
                 string boundary = "------------------------" + DateTime.Now.Ticks.ToString("x");
                 client.Headers[HttpRequestHeader.ContentType] = "multipart/form-data; boundary=" + boundary;
@@ -85,21 +100,15 @@ namespace Accord_RSTP
 
                 var nfile = client.Encoding.GetBytes(package);
 
-                byte[] resp = client.UploadData(Constants.STREAM_UPLOAD_URL, "POST", nfile);
+                client.UploadData(Constants.STREAM_UPLOAD_URL, "POST", nfile);
             }
-            catch(WebException ex)
+            catch (WebException ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
 
-        public static byte[] ImageToByte(Image img)
-        {
-            ImageConverter converter = new ImageConverter();
-            return (byte[])converter.ConvertTo(img, typeof(byte[]));
-        }
-
-        public static string GetToken(string userName, string password)
+        private static string GetToken(string userName, string password)
         {
             var result = string.Empty;
             var accesToken = string.Empty;
@@ -112,19 +121,27 @@ namespace Accord_RSTP
             };
 
             var content = new FormUrlEncodedContent(pairs);
-            using (var client = new HttpClient())
+
+            try
             {
-                var response = client.PostAsync(Constants.TOKEN_URL, content).Result;
-
-                if (response.StatusCode == HttpStatusCode.OK)
+                using (var client = new HttpClient())
                 {
-                    result = response.Content.ReadAsStringAsync().Result;
-                    var jsonResult = JObject.Parse(result);
-                    return jsonResult.GetValue(Constants.ACCESS_TOKEN_PROPERTY).ToString();
-                }                               
+                    var response = client.PostAsync(Constants.TOKEN_URL, content).Result;
 
-                return string.Empty;
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        result = response.Content.ReadAsStringAsync().Result;
+                        var jsonResult = JObject.Parse(result);
+                        return jsonResult.GetValue(Constants.ACCESS_TOKEN_PROPERTY).ToString();
+                    }
+                }
             }
+            catch (Exception)
+            {
+                // Handle Exception later 
+            }
+
+            return string.Empty;
         }
     }
 }
