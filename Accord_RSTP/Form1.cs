@@ -4,6 +4,9 @@ using System.Windows.Forms;
 using Accord.Video;
 using System.Drawing;
 using System.Net;
+using System.Collections.Generic;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
 
 namespace Accord_RSTP
 {
@@ -12,6 +15,11 @@ namespace Accord_RSTP
         private IVideoSource videoSource;
         private AsyncVideoSource asyncVideoSource;
         private string fileName;
+        private string username = "admin";
+        private string password = "123456";
+        private string access_token = string.Empty;
+
+        private string accessToken = string.Empty;
 
         public Form1()
         {
@@ -21,6 +29,7 @@ namespace Accord_RSTP
         private void Form1_Load(object sender, EventArgs e)
         {
             videoSource = new VideoCaptureDevice();
+            accessToken = GetToken(username, password);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -37,7 +46,6 @@ namespace Accord_RSTP
             if(captureDeviceForm.ShowDialog(this) == DialogResult.OK)
             {
                 videoSource = captureDeviceForm.VideoDevice;
-                var source = videoSource.Source;
                 asyncVideoSource = new AsyncVideoSource(videoSource);
 
                 asyncVideoSource.NewFrame += AsyncVideoSource_NewFrame;
@@ -71,12 +79,13 @@ namespace Accord_RSTP
                 var client = new WebClient();
                 string boundary = "------------------------" + DateTime.Now.Ticks.ToString("x");
                 client.Headers[HttpRequestHeader.ContentType] = "multipart/form-data; boundary=" + boundary;
+                client.Headers[HttpRequestHeader.Authorization] = "Bearer " + accessToken;
                 var fileData = client.Encoding.GetString(file);
                 var package = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n{3}\r\n--{0}--\r\n", boundary, fileName, "image/jpeg", fileData);
 
                 var nfile = client.Encoding.GetBytes(package);
 
-                byte[] resp = client.UploadData(Constants.StreamUploadUrl, "POST", nfile);
+                byte[] resp = client.UploadData(Constants.STREAM_UPLOAD_URL, "POST", nfile);
             }
             catch(WebException ex)
             {
@@ -88,6 +97,34 @@ namespace Accord_RSTP
         {
             ImageConverter converter = new ImageConverter();
             return (byte[])converter.ConvertTo(img, typeof(byte[]));
+        }
+
+        public static string GetToken(string userName, string password)
+        {
+            var result = string.Empty;
+            var accesToken = string.Empty;
+
+            var pairs = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>( "grant_type", "password" ),
+                new KeyValuePair<string, string>( "username", userName ),
+                new KeyValuePair<string, string> ( "password", password)
+            };
+
+            var content = new FormUrlEncodedContent(pairs);
+            using (var client = new HttpClient())
+            {
+                var response = client.PostAsync(Constants.TOKEN_URL, content).Result;
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+                    var jsonResult = JObject.Parse(result);
+                    return jsonResult.GetValue(Constants.ACCESS_TOKEN_PROPERTY).ToString();
+                }                               
+
+                return string.Empty;
+            }
         }
     }
 }

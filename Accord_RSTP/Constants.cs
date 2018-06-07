@@ -2,6 +2,9 @@
 {
     public class Constants
     {
-        public const string StreamUploadUrl = "http://localhost:56674/api/RemoteStream";
+        public const string STREAM_UPLOAD_URL = "http://localhost:56674/api/RemoteStream";
+        public const string BASE_URL = "http://localhost:56674/";
+        public const string TOKEN_URL = "http://localhost:56674/token";
+        public const string ACCESS_TOKEN_PROPERTY = "access_token";
     }
 }
